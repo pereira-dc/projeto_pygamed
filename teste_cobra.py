@@ -1,18 +1,15 @@
-import pygame
-import cores
-import sys
-import random
+import pygame, cores, sys, random 
 from pygame.locals import *
 
 def main():
     pygame.init()
-    largura, altura = 1000, 600  # Corrigido: largura e altura na ordem correta
+    
+    largura, altura = 1000, 600  
     tela = pygame.display.set_mode((largura, altura))
     pygame.display.set_caption('Cobrathon')
     clock = pygame.time.Clock()
-
+    som_colisao = pygame.mixer.Sound('smw_fireball.wav')
     tam_quadrado = 20
-    speed_jogo = 7
 
     def gerar_comida():
         comida_x = round(random.randrange(0, largura - tam_quadrado) / tam_quadrado) * tam_quadrado
@@ -27,9 +24,9 @@ def main():
             pygame.draw.rect(tela, cores.verde, [pixel[0], pixel[1], tam, tam])
 
     def draw_pontos(pontos):
-        fonte = pygame.font.SysFont('Gabriola', 40, False, False)
-        text = fonte.render(f'Pontos: {pontos}', True, cores.branco)
-        tela.blit(text, [1, 1])
+        fonte = pygame.font.SysFont('Gabriola', 40, False, True)
+        texto = fonte.render(f'Pontos: {pontos}', True, cores.branco)
+        tela.blit(texto, (10, 10))
 
     def select_dir(key, dir_x, dir_y):
         # Evita inverter a direção diretamente e suporta WASD e setas
@@ -44,13 +41,15 @@ def main():
         return dir_x, dir_y
 
     def rodar_jogo():
-        x_cobra = largura / 2
-        y_cobra = altura / 2
+        x_cobra = int(largura / 2)
+        y_cobra = int(altura / 2)
         dir_xc = 0
         dir_yc = 0
         tam_cobra = 1
         pixels = []
         comida_x, comida_y = gerar_comida()
+        speed_jogo = 7
+
 
         while True:
             tela.fill(cores.preto)
@@ -91,6 +90,8 @@ def main():
             if x_cobra == comida_x and y_cobra == comida_y:
                 tam_cobra += 1
                 comida_x, comida_y = gerar_comida()
+                som_colisao.play()
+                speed_jogo += 1
 
             clock.tick(speed_jogo)
 
