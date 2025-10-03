@@ -24,32 +24,33 @@ def main():
             pygame.draw.rect(tela, cores.verde, [pixel[0], pixel[1], tam, tam])
 
     def draw_pontos(pontos):
-        fonte = pygame.font.SysFont('Gabriola', 40, False, True)
+        fonte = pygame.font.SysFont('Gabriola', 40, bold=False, italic=True)
         texto = fonte.render(f'Pontos: {pontos}', True, cores.branco)
         tela.blit(texto, (10, 10))
 
-    def select_dir(key, dir_x, dir_y):
-        # Evita inverter a direção diretamente e suporta WASD e setas
-        if (key == pygame.K_DOWN or key == pygame.K_s) and dir_y != -tam_quadrado:
-            return 0, tam_quadrado
-        elif (key == pygame.K_UP or key == pygame.K_w) and dir_y != tam_quadrado:
-            return 0, -tam_quadrado
-        elif (key == pygame.K_RIGHT or key == pygame.K_d) and dir_x != -tam_quadrado:
-            return tam_quadrado, 0
-        elif (key == pygame.K_LEFT or key == pygame.K_a) and dir_x != tam_quadrado:
-            return -tam_quadrado, 0
-        return dir_x, dir_y
+    def select_dir(key, dir_xc, dir_yc, next_dir_x, next_dir_y):
+        if (key == pygame.K_DOWN or key == pygame.K_s) and dir_yc != -1:
+            return 0, 1
+        elif (key == pygame.K_UP or key == pygame.K_w) and dir_yc != 1:
+            return 0, -1
+        elif (key == pygame.K_RIGHT or key == pygame.K_d) and dir_xc != -1:
+            return 1, 0
+        elif (key == pygame.K_LEFT or key == pygame.K_a) and dir_xc != 1:
+            return -1, 0
+        return dir_xc, dir_yc
 
     def rodar_jogo():
         x_cobra = int(largura / 2)
         y_cobra = int(altura / 2)
-        dir_xc = 0
-        dir_yc = 0
+        dir_xc, dir_yc = 0, 0
+        next_dir_x, next_dir_y = dir_xc, dir_yc
+
         tam_cobra = 1
         pixels = []
         comida_x, comida_y = gerar_comida()
-        speed_jogo = 7
 
+        velocidade = 4   # pixels por frame → controla suavidade
+        clock_tick = 60  # FPS fixo
 
         while True:
             tela.fill(cores.preto)
@@ -58,42 +59,52 @@ def main():
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    dir_xc, dir_yc = select_dir(event.key, dir_xc, dir_yc)
+                    next_dir_x, next_dir_y = select_dir(event.key, dir_xc, dir_yc, next_dir_x, next_dir_y)
 
-            x_cobra += dir_xc
-            y_cobra += dir_yc
+            # só troca a direção quando estiver alinhado na grade
+            if x_cobra % tam_quadrado == 0 and y_cobra % tam_quadrado == 0:
+                dir_xc, dir_yc = next_dir_x, next_dir_y
 
-            if x_cobra >= largura:
-                x_cobra = 0
-            elif x_cobra < 0:
-                x_cobra = largura - tam_quadrado
-            if y_cobra >= altura:
-                y_cobra = 0
-            elif y_cobra < 0:
-                y_cobra = altura - tam_quadrado
+            # movimento suave (pixel a pixel)
+            x_cobra += dir_xc * velocidade
+            y_cobra += dir_yc * velocidade
 
+            # colisão com borda
+            if x_cobra > largura - tam_quadrado or x_cobra < 0 or y_cobra > altura - tam_quadrado or y_cobra < 0:
+                pygame.quit()
+                sys.exit()
+
+            # atualiza corpo
             pixels.append([x_cobra, y_cobra])
             if len(pixels) > tam_cobra:
                 del pixels[0]
 
+            # colisão consigo mesmo
             for pixel in pixels[:-1]:
                 if pixel == [x_cobra, y_cobra]:
                     pygame.quit()
                     sys.exit()
 
+            # desenha
+            comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
             draw_comida(tam_quadrado, comida_x, comida_y)
-            draw_cobra(tam_quadrado, pixels)
-            draw_pontos(tam_cobra - 1)
 
+            cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
+            draw_cobra(tam_quadrado, pixels)
+
+            draw_pontos(tam_cobra - 1)
             pygame.display.update()
 
-            if x_cobra == comida_x and y_cobra == comida_y:
+            # colisão com comida
+            if cobra_rect.colliderect(comida_rect):
                 tam_cobra += 1
                 comida_x, comida_y = gerar_comida()
                 som_colisao.play()
-                speed_jogo += 1
+                if velocidade < tam_quadrado:  # limite para não pular blocos
+                    velocidade += 1
 
-            clock.tick(speed_jogo)
+            clock.tick(clock_tick)
+
 
     rodar_jogo()
 
