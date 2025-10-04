@@ -1,10 +1,34 @@
 import pygame, sys, random, cores
 from pygame.locals import *
 
-# Configurações
 largura, altura = 1000, 600
 tam_quadrado = 20
 fps = 30
+
+def tela_inicio(tela):
+    tela.fill(cores.preto)
+    fonte_titulo = pygame.font.SysFont('Arial', 60, True, True)
+    fonte_instrucao = pygame.font.SysFont('Arial', 28, True, True)
+
+    texto_titulo = fonte_titulo.render("Cobrathon", True, cores.verde)
+    texto_instrucao = fonte_instrucao.render("Pressione ENTER para começar", True, cores.branco)
+
+    ret_titulo = texto_titulo.get_rect(center=(largura//2, altura//2 - 50))
+    ret_instrucao = texto_instrucao.get_rect(center=(largura//2, altura//2 + 50))
+
+    tela.blit(texto_titulo, ret_titulo)
+    tela.blit(texto_instrucao, ret_instrucao)
+    pygame.display.update()
+
+    esperando = True
+    while esperando:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYDOWN:
+                if event.key == K_RETURN:  # Enter para iniciar
+                    esperando = False
 
 def gerar_comida():
     comida_x = random.randrange(0, largura - tam_quadrado, tam_quadrado)
@@ -55,6 +79,8 @@ def rodar_jogo():
 
     morreu = False
 
+    tela_inicio(tela)
+
     while True:
         clock.tick(fps)
         tela.fill(cores.branco)
@@ -71,29 +97,23 @@ def rodar_jogo():
                     dir_x, dir_y = select_dir(event.key, dir_x, dir_y, tam_quadrado)
 
         if not morreu:
-            # Movimento da cobra
             x_cobra += dir_x
             y_cobra += dir_y
 
-            # Colisão com parede → Game Over
             if x_cobra < 0 or x_cobra >= largura or y_cobra < 0 or y_cobra >= altura:
                 morreu = True
 
-            # Atualiza corpo
             pixels.append([x_cobra, y_cobra])
             if len(pixels) > comprimento:
                 del pixels[0]
 
-            # Colisão consigo mesma
             if [x_cobra, y_cobra] in pixels[:-1]:
                 morreu = True
 
-            # Desenhos do jogo
             draw_comida(tela, comida_x, comida_y)
             draw_cobra(tela, pixels)
             draw_pontos(tela, pontos)
 
-            # Colisão com comida
             cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
             comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
             if cobra_rect.colliderect(comida_rect):
@@ -103,14 +123,12 @@ def rodar_jogo():
                 som_colisao.play()
 
         else:
-            # Tela de Game Over
             tela.fill(cores.preto)
             fonte = pygame.font.SysFont('Arial', 28, True, True)
             texto = fonte.render("Game Over! Pressione R para reiniciar", True, cores.branco)
             rect = texto.get_rect(center=(largura//2, altura//2))
             tela.blit(texto, rect)
 
-            # Aguarda input para reiniciar
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
