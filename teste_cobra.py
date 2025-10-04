@@ -1,112 +1,126 @@
-import pygame, cores, sys, random 
+import pygame, sys, random, cores
 from pygame.locals import *
 
-def main():
+# Configurações
+largura, altura = 1000, 600
+tam_quadrado = 20
+fps = 30
+
+def gerar_comida():
+    comida_x = random.randrange(0, largura - tam_quadrado, tam_quadrado)
+    comida_y = random.randrange(0, altura - tam_quadrado, tam_quadrado)
+    return comida_x, comida_y
+
+def draw_comida(tela, comida_x, comida_y):
+    pygame.draw.rect(tela, cores.vermelho, (comida_x, comida_y, tam_quadrado, tam_quadrado))
+
+def draw_cobra(tela, pixels):
+    for pixel in pixels:
+        pygame.draw.rect(tela, cores.verde, (pixel[0], pixel[1], tam_quadrado, tam_quadrado))
+
+def draw_pontos(tela, pontos):
+    fonte = pygame.font.SysFont('Courier New', 40, bold=False, italic=True)
+    texto = fonte.render(f'Pontos: {pontos}', True, cores.preto)
+    tela.blit(texto, (10, 10))
+
+def select_dir(key, dir_x, dir_y, velocidade):
+    if (key == K_DOWN or key == K_s) and dir_y != -velocidade:
+        return 0, velocidade
+    elif (key == K_UP or key == K_w) and dir_y != velocidade:
+        return 0, -velocidade
+    elif (key == K_RIGHT or key == K_d) and dir_x != -velocidade:
+        return velocidade, 0
+    elif (key == K_LEFT or key == K_a) and dir_x != velocidade:
+        return -velocidade, 0
+    return dir_x, dir_y
+
+def reiniciar_jogo():
+    x_cobra = largura // 2
+    y_cobra = altura // 2
+    dir_x, dir_y = tam_quadrado, 0
+    pixels = []
+    comprimento = 5
+    comida_x, comida_y = gerar_comida()
+    pontos = 0
+    return x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, comida_x, comida_y, pontos
+
+def rodar_jogo():
     pygame.init()
-    
-    largura, altura = 1000, 600  
     tela = pygame.display.set_mode((largura, altura))
     pygame.display.set_caption('Cobrathon')
     clock = pygame.time.Clock()
     som_colisao = pygame.mixer.Sound('smw_fireball.wav')
-    tam_quadrado = 20
 
-    def gerar_comida():
-        comida_x = round(random.randrange(0, largura - tam_quadrado) / tam_quadrado) * tam_quadrado
-        comida_y = round(random.randrange(0, altura - tam_quadrado) / tam_quadrado) * tam_quadrado
-        return comida_x, comida_y
+    x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, comida_x, comida_y, pontos = reiniciar_jogo()
 
-    def draw_comida(tam, comida_x, comida_y):
-        pygame.draw.rect(tela, cores.vermelho, [comida_x, comida_y, tam, tam])
+    morreu = False
 
-    def draw_cobra(tam, pixels):
-        for pixel in pixels:
-            pygame.draw.rect(tela, cores.verde, [pixel[0], pixel[1], tam, tam])
+    while True:
+        clock.tick(fps)
+        tela.fill(cores.branco)
 
-    def draw_pontos(pontos):
-        fonte = pygame.font.SysFont('Gabriola', 40, bold=False, italic=True)
-        texto = fonte.render(f'Pontos: {pontos}', True, cores.branco)
-        tela.blit(texto, (10, 10))
-
-    def select_dir(key, dir_xc, dir_yc, next_dir_x, next_dir_y):
-        if (key == pygame.K_DOWN or key == pygame.K_s) and dir_yc != -1:
-            return 0, 1
-        elif (key == pygame.K_UP or key == pygame.K_w) and dir_yc != 1:
-            return 0, -1
-        elif (key == pygame.K_RIGHT or key == pygame.K_d) and dir_xc != -1:
-            return 1, 0
-        elif (key == pygame.K_LEFT or key == pygame.K_a) and dir_xc != 1:
-            return -1, 0
-        return dir_xc, dir_yc
-
-    def rodar_jogo():
-        x_cobra = int(largura / 2)
-        y_cobra = int(altura / 2)
-        dir_xc, dir_yc = 0, 0
-        next_dir_x, next_dir_y = dir_xc, dir_yc
-
-        tam_cobra = 1
-        pixels = []
-        comida_x, comida_y = gerar_comida()
-
-        velocidade = 4   # pixels por frame → controla suavidade
-        clock_tick = 60  # FPS fixo
-
-        while True:
-            tela.fill(cores.preto)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    next_dir_x, next_dir_y = select_dir(event.key, dir_xc, dir_yc, next_dir_x, next_dir_y)
-
-            # só troca a direção quando estiver alinhado na grade
-            if x_cobra % tam_quadrado == 0 and y_cobra % tam_quadrado == 0:
-                dir_xc, dir_yc = next_dir_x, next_dir_y
-
-            # movimento suave (pixel a pixel)
-            x_cobra += dir_xc * velocidade
-            y_cobra += dir_yc * velocidade
-
-            # colisão com borda
-            if x_cobra > largura - tam_quadrado or x_cobra < 0 or y_cobra > altura - tam_quadrado or y_cobra < 0:
+        for event in pygame.event.get():
+            if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == KEYDOWN:
+                if morreu and event.key == K_r:
+                    x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, comida_x, comida_y, pontos = reiniciar_jogo()
+                    morreu = False
+                else:
+                    dir_x, dir_y = select_dir(event.key, dir_x, dir_y, tam_quadrado)
 
-            # atualiza corpo
+        if not morreu:
+            # Movimento da cobra
+            x_cobra += dir_x
+            y_cobra += dir_y
+
+            # Colisão com parede → Game Over
+            if x_cobra < 0 or x_cobra >= largura or y_cobra < 0 or y_cobra >= altura:
+                morreu = True
+
+            # Atualiza corpo
             pixels.append([x_cobra, y_cobra])
-            if len(pixels) > tam_cobra:
+            if len(pixels) > comprimento:
                 del pixels[0]
 
-            # colisão consigo mesmo
-            for pixel in pixels[:-1]:
-                if pixel == [x_cobra, y_cobra]:
+            # Colisão consigo mesma
+            if [x_cobra, y_cobra] in pixels[:-1]:
+                morreu = True
+
+            # Desenhos do jogo
+            draw_comida(tela, comida_x, comida_y)
+            draw_cobra(tela, pixels)
+            draw_pontos(tela, pontos)
+
+            # Colisão com comida
+            cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
+            comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
+            if cobra_rect.colliderect(comida_rect):
+                comida_x, comida_y = gerar_comida()
+                comprimento += 1
+                pontos += 1
+                som_colisao.play()
+
+        else:
+            # Tela de Game Over
+            tela.fill(cores.preto)
+            fonte = pygame.font.SysFont('Arial', 28, True, True)
+            texto = fonte.render("Game Over! Pressione R para reiniciar", True, cores.branco)
+            rect = texto.get_rect(center=(largura//2, altura//2))
+            tela.blit(texto, rect)
+
+            # Aguarda input para reiniciar
+            for event in pygame.event.get():
+                if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == KEYDOWN:
+                    if event.key == K_r:
+                        x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, comida_x, comida_y, pontos = reiniciar_jogo()
+                        morreu = False
 
-            # desenha
-            comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
-            draw_comida(tam_quadrado, comida_x, comida_y)
+        pygame.display.update()
 
-            cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
-            draw_cobra(tam_quadrado, pixels)
-
-            draw_pontos(tam_cobra - 1)
-            pygame.display.update()
-
-            # colisão com comida
-            if cobra_rect.colliderect(comida_rect):
-                tam_cobra += 1
-                comida_x, comida_y = gerar_comida()
-                som_colisao.play()
-                if velocidade < tam_quadrado:  # limite para não pular blocos
-                    velocidade += 1
-
-            clock.tick(clock_tick)
-
-
+if __name__ == "__main__":
     rodar_jogo()
-
-if __name__ == '__main__':
-    main()
