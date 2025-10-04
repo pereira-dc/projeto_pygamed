@@ -3,7 +3,6 @@ from pygame.locals import *
 
 largura, altura = 1000, 600
 tam_quadrado = 20
-fps = 30
 
 def tela_inicio(tela):
     tela.fill(cores.preto)
@@ -74,6 +73,7 @@ def rodar_jogo():
     pygame.display.set_caption('Cobrathon')
     clock = pygame.time.Clock()
     som_colisao = pygame.mixer.Sound('smw_fireball.wav')
+    fps = 20
 
     x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, comida_x, comida_y, pontos = reiniciar_jogo()
 
@@ -121,6 +121,9 @@ def rodar_jogo():
                 comprimento += 1
                 pontos += 1
                 som_colisao.play()
+
+                if fps < 50:
+                    fps += 1
 
         else:
             tela.fill(cores.preto)
