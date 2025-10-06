@@ -86,7 +86,7 @@ def spawn_npc():
     direcoes = [(tam_quadrado, 0), (-tam_quadrado, 0), (0, tam_quadrado), (0, -tam_quadrado)]
     dir_x_npc, dir_y_npc = random.choice(direcoes)
     pixels_npc = []
-    tam_npc = 5
+    tam_npc = 7
     return x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, True
 
 def reiniciar_jogo():
