@@ -1,4 +1,4 @@
-import pygame, sys, random, cores
+mport pygame, sys, random, cores
 from pygame.locals import *
 
 largura, altura = 1000, 600
@@ -36,7 +36,6 @@ def tela_inicio(tela):
                     esperando = False
     
         piscar_texto(tela, texto_titulo, ret_titulo, 500)
-
         pygame.display.update()
 
 def gerar_comida():
@@ -62,7 +61,6 @@ def draw_pontos(tela, pontos):
 
 def piscar_texto(tela, texto_renderizado, retangulo_texto, velocidade_pisca):
     tempo = pygame.time.get_ticks()
-
     if (tempo % (velocidade_pisca * 2)) < velocidade_pisca:
         tela.blit(texto_renderizado, retangulo_texto)
 
@@ -92,7 +90,6 @@ def reiniciar_jogo():
     dir_x, dir_y = tam_quadrado, 0
     pixels = []
     tam = 5
-    lista_cobra = []
     comida_x, comida_y = gerar_comida()
     pontos = 0
     npc_ativo = False
@@ -100,7 +97,7 @@ def reiniciar_jogo():
     pixels_npc = []
     tam_npc = 0
     ultimo_spawn_pontos = 0
-    return x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos
+    return x_cobra, y_cobra, dir_x, dir_y, pixels, tam, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos
 
 def rodar_jogo():
     pygame.init()
@@ -109,7 +106,8 @@ def rodar_jogo():
     clock = pygame.time.Clock()
     som_colisao = pygame.mixer.Sound('smw_yoshi_swallow.wav')
     fps = 20
-    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
+
+    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
     morreu = False
 
     tela_inicio(tela)
@@ -124,7 +122,7 @@ def rodar_jogo():
                 sys.exit()
             elif event.type == KEYDOWN:
                 if morreu and event.key == K_r:
-                    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
+                    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
                     morreu = False
                 elif event.key == K_ESCAPE:
                     pygame.quit()
@@ -140,14 +138,10 @@ def rodar_jogo():
             x_cobra += dir_x
             y_cobra += dir_y
 
-            if x_cobra >= largura:
-                x_cobra = 0
-            if x_cobra < 0:
-                x_cobra = largura - tam_quadrado
-            if y_cobra < 0:
-                y_cobra = altura - tam_quadrado
-            if y_cobra >= altura:
-                y_cobra = 0
+            if x_cobra >= largura: x_cobra = 0
+            if x_cobra < 0: x_cobra = largura - tam_quadrado
+            if y_cobra < 0: y_cobra = altura - tam_quadrado
+            if y_cobra >= altura: y_cobra = 0
 
             pixels.append([x_cobra, y_cobra])
             if len(pixels) > tam:
@@ -168,14 +162,10 @@ def rodar_jogo():
                 x_npc += dir_x_npc
                 y_npc += dir_y_npc
 
-                if x_npc >= largura:
-                    x_npc = 0
-                if x_npc < 0:
-                    x_npc = largura - tam_quadrado
-                if y_npc < 0:
-                    y_npc = altura - tam_quadrado
-                if y_npc >= altura:
-                    y_npc = 0
+                if x_npc >= largura: x_npc = 0
+                if x_npc < 0: x_npc = largura - tam_quadrado
+                if y_npc < 0: y_npc = altura - tam_quadrado
+                if y_npc >= altura: y_npc = 0
 
                 pixels_npc.append([x_npc, y_npc])
                 if len(pixels_npc) > tam_npc:
@@ -223,24 +213,8 @@ def rodar_jogo():
             ret_msg = msg_formatada.get_rect(center=(largura//2, altura//2 + 50))
 
             piscar_texto(tela, msg_formatada, ret_msg, 500)
-
-            morreu = True
-            
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == KEYDOWN:
-                    if event.key == K_r:
-                        x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
-                        morreu = False
-
-            ret_txt.center = largura//2, altura//2
             tela.blit(txt_formatado, ret_txt)
-        
-        if len(lista_cobra) > tam:
-            del lista_cobra[0]
-        
+
         pygame.display.update()
 
 if __name__ == "__main__":
