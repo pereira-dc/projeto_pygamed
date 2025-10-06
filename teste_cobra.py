@@ -1,7 +1,7 @@
 mport pygame, sys, random, cores
 from pygame.locals import *
 
-largura, altura = 1000, 600
+largura, altura = 800, 600
 tam_quadrado = 20
 
 def tela_inicio(tela):
@@ -59,6 +59,11 @@ def draw_pontos(tela, pontos):
     texto = fonte.render(f'Pontos: {pontos}', True, cores.preto)
     tela.blit(texto, (10, 10))
 
+def draw_recorde(tela, recorde):
+    fonte = pygame.font.SysFont('Courier New', 40, bold=False, italic=True)
+    texto = fonte.render(f'Recorde: {recorde}', True, cores.preto)
+    tela.blit(texto, (10, 60))
+
 def piscar_texto(tela, texto_renderizado, retangulo_texto, velocidade_pisca):
     tempo = pygame.time.get_ticks()
     if (tempo % (velocidade_pisca * 2)) < velocidade_pisca:
@@ -105,10 +110,15 @@ def rodar_jogo():
     pygame.display.set_caption('Cobrathon')
     clock = pygame.time.Clock()
     som_colisao = pygame.mixer.Sound('smw_yoshi_swallow.wav')
+<<<<<<< Updated upstream
     fps = 20
 
+=======
+    fps = 15
+>>>>>>> Stashed changes
     x_cobra, y_cobra, dir_x, dir_y, pixels, tam, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
     morreu = False
+    recorde = 0
 
     tela_inicio(tela)
 
@@ -133,7 +143,8 @@ def rodar_jogo():
         if not morreu:
             if pontos >= 5 and pontos > ultimo_spawn_pontos and pontos % 5 == 0 and not npc_ativo:
                 x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo = spawn_npc()
-                ultimo_spawn_pontos = pontos  
+                ultimo_spawn_pontos = pontos 
+                tam_npc += 1 
 
             x_cobra += dir_x
             y_cobra += dir_y
@@ -189,6 +200,7 @@ def rodar_jogo():
             if npc_ativo:
                 draw_npc(tela, pixels_npc)
             draw_pontos(tela, pontos)
+            draw_recorde(tela, recorde)
 
             cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
             comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
@@ -200,6 +212,10 @@ def rodar_jogo():
 
                 if fps < 50:
                     fps += 1
+
+                if pontos > recorde:
+                    recorde += 1
+
 
         else:
             tela.fill(cores.preto)
@@ -213,8 +229,29 @@ def rodar_jogo():
             ret_msg = msg_formatada.get_rect(center=(largura//2, altura//2 + 50))
 
             piscar_texto(tela, msg_formatada, ret_msg, 500)
+<<<<<<< Updated upstream
             tela.blit(txt_formatado, ret_txt)
 
+=======
+
+            morreu = True
+            
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == KEYDOWN:
+                    if event.key == K_r:
+                        x_cobra, y_cobra, dir_x, dir_y, pixels, tam, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
+                        morreu = False
+
+            ret_txt.center = largura//2, altura//2
+            tela.blit(txt_formatado, ret_txt)
+        
+        if len(pixels) > tam:
+            del pixels[0]
+        
+>>>>>>> Stashed changes
         pygame.display.update()
 
 if __name__ == "__main__":
