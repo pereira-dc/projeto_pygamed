@@ -10,7 +10,7 @@ def tela_inicio(tela):
     fonte_instrucao = pygame.font.SysFont('Arial', 28, True, True)
 
     texto_titulo = fonte_titulo.render("Cobrathon", True, cores.verde)
-    texto_instrucao = fonte_instrucao.render("Pressione ENTER para começars ou ESC para sair", True, cores.branco)
+    texto_instrucao = fonte_instrucao.render("Pressione ENTER para começar ou ESC para sair", True, cores.branco)
 
     ret_titulo = texto_titulo.get_rect(center=(largura//2, altura//2 - 50))
     ret_instrucao = texto_instrucao.get_rect(center=(largura//2, altura//2 + 50))
@@ -19,7 +19,6 @@ def tela_inicio(tela):
     tela.blit(texto_instrucao, ret_instrucao)
     som_inicial = pygame.mixer.Sound('echoesofeternitymix.ogg')
     som_inicial.play(-1)
-
 
     pisca = 500
 
@@ -34,13 +33,13 @@ def tela_inicio(tela):
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN:
-                if event.key == K_RETURN:  # Enter para iniciar
+                if event.key == K_RETURN:
                     som_inicial.stop()
                     esperando = False
     
         tempo = pygame.time.get_ticks()
-        if (tempo % (pisca * 2)) < pisca: # tempo % 1000 < pisca(500): Retorna a mensagem, caso contrário, some.
-            tela.blit(texto_titulo, ret_titulo) # Desenha a mensagem na tela
+        if (tempo % (pisca * 2)) < pisca:
+            tela.blit(texto_titulo, ret_titulo)
         pygame.display.update()
 
 def gerar_comida():
@@ -48,13 +47,16 @@ def gerar_comida():
     comida_y = random.randrange(0, altura - tam_quadrado, tam_quadrado)
     return comida_x, comida_y
 
-    
 def draw_comida(tela, comida_x, comida_y): 
-        pygame.draw.rect(tela, cores.vermelho, (comida_x, comida_y, tam_quadrado, tam_quadrado))
+    pygame.draw.rect(tela, cores.vermelho, (comida_x, comida_y, tam_quadrado, tam_quadrado))
 
 def draw_cobra(tela, pixels):
     for pixel in pixels:
         pygame.draw.rect(tela, cores.verde, (pixel[0], pixel[1], tam_quadrado, tam_quadrado))
+
+def draw_npc(tela, pixels_npc):
+    for pixel in pixels_npc:
+        pygame.draw.rect(tela, cores.azul, (pixel[0], pixel[1], tam_quadrado, tam_quadrado))
 
 def draw_pontos(tela, pontos):
     fonte = pygame.font.SysFont('Courier New', 40, bold=False, italic=True)
@@ -72,16 +74,30 @@ def select_dir(key, dir_x, dir_y, velocidade):
         return -velocidade, 0
     return dir_x, dir_y
 
+def spawn_npc():
+    x_npc = random.randrange(0, largura - tam_quadrado, tam_quadrado)
+    y_npc = random.randrange(0, altura - tam_quadrado, tam_quadrado)
+    direcoes = [(tam_quadrado, 0), (-tam_quadrado, 0), (0, tam_quadrado), (0, -tam_quadrado)]
+    dir_x_npc, dir_y_npc = random.choice(direcoes)
+    pixels_npc = []
+    tam_npc = 5
+    return x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, True
+
 def reiniciar_jogo():
     x_cobra = largura // 2
     y_cobra = altura // 2
     dir_x, dir_y = tam_quadrado, 0
     pixels = []
-    comprimento = 5
+    tam = 5
     lista_cobra = []
     comida_x, comida_y = gerar_comida()
     pontos = 0
-    return x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, lista_cobra, comida_x, comida_y, pontos
+    npc_ativo = False
+    x_npc = y_npc = dir_x_npc = dir_y_npc = None
+    pixels_npc = []
+    tam_npc = 0
+    ultimo_spawn_pontos = 0
+    return x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos
 
 def rodar_jogo():
     pygame.init()
@@ -90,7 +106,7 @@ def rodar_jogo():
     clock = pygame.time.Clock()
     som_colisao = pygame.mixer.Sound('smw_yoshi_swallow.wav')
     fps = 20
-    x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento, lista_cobra, comida_x, comida_y, pontos = reiniciar_jogo()
+    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
     morreu = False
 
     tela_inicio(tela)
@@ -105,7 +121,7 @@ def rodar_jogo():
                 sys.exit()
             elif event.type == KEYDOWN:
                 if morreu and event.key == K_r:
-                    x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento,lista_cobra, comida_x, comida_y, pontos = reiniciar_jogo()
+                    x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
                     morreu = False
                 elif event.key == K_ESCAPE:
                     pygame.quit()
@@ -113,12 +129,14 @@ def rodar_jogo():
                 else:
                     dir_x, dir_y = select_dir(event.key, dir_x, dir_y, tam_quadrado)
 
-
         if not morreu:
+            if pontos >= 5 and pontos > ultimo_spawn_pontos and pontos % 5 == 0 and not npc_ativo:
+                x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo = spawn_npc()
+                ultimo_spawn_pontos = pontos  
+
             x_cobra += dir_x
             y_cobra += dir_y
 
-            #Teletransporte da Cobra
             if x_cobra >= largura:
                 x_cobra = 0
             if x_cobra < 0:
@@ -129,21 +147,61 @@ def rodar_jogo():
                 y_cobra = 0
 
             pixels.append([x_cobra, y_cobra])
-            if len(pixels) > comprimento:
+            if len(pixels) > tam:
                 del pixels[0]
 
             if [x_cobra, y_cobra] in pixels[:-1]:
                 morreu = True
 
+            if npc_ativo and [x_cobra, y_cobra] in pixels_npc:
+                morreu = True
+
+            if npc_ativo:
+                if random.random() < 0.1:
+                    direcoes = [(tam_quadrado, 0), (-tam_quadrado, 0), (0, tam_quadrado), (0, -tam_quadrado)]
+                    possiveis_dirs = [d for d in direcoes if d != (-dir_x_npc, -dir_y_npc)]
+                    dir_x_npc, dir_y_npc = random.choice(possiveis_dirs)
+
+                x_npc += dir_x_npc
+                y_npc += dir_y_npc
+
+                if x_npc >= largura:
+                    x_npc = 0
+                if x_npc < 0:
+                    x_npc = largura - tam_quadrado
+                if y_npc < 0:
+                    y_npc = altura - tam_quadrado
+                if y_npc >= altura:
+                    y_npc = 0
+
+                pixels_npc.append([x_npc, y_npc])
+                if len(pixels_npc) > tam_npc:
+                    del pixels_npc[0]
+
+                if [x_npc, y_npc] in pixels_npc[:-1]:
+                    npc_ativo = False
+
+                if [x_npc, y_npc] in pixels:
+                    npc_ativo = False
+
+                npc_rect = pygame.Rect(x_npc, y_npc, tam_quadrado, tam_quadrado)
+                comida_rect_npc = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
+                if npc_rect.colliderect(comida_rect_npc):
+                    comida_x, comida_y = gerar_comida()
+                    tam_npc += 1
+                    som_colisao.play()
+
             draw_comida(tela, comida_x, comida_y)
             draw_cobra(tela, pixels)
+            if npc_ativo:
+                draw_npc(tela, pixels_npc)
             draw_pontos(tela, pontos)
 
             cobra_rect = pygame.Rect(x_cobra, y_cobra, tam_quadrado, tam_quadrado)
             comida_rect = pygame.Rect(comida_x, comida_y, tam_quadrado, tam_quadrado)
             if cobra_rect.colliderect(comida_rect):
                 comida_x, comida_y = gerar_comida()
-                comprimento += 1
+                tam += 1
                 pontos += 1
                 som_colisao.play()
 
@@ -158,13 +216,13 @@ def rodar_jogo():
             txt_formatado = fonte_txt.render(texto, True, (cores.branco))
             ret_txt = txt_formatado.get_rect(center=(largura//2, altura//2 - 50))
             msg = "Pressione R para reiniciar ou ESC para sair"
-            msg_formatado = fonte_msg.render(msg, True, (cores.branco))
-            ret_msg = msg_formatado.get_rect(center=(largura//2, altura//2 + 50))
+            msg_formatada = fonte_msg.render(msg, True, (cores.branco))
+            ret_msg = msg_formatada.get_rect(center=(largura//2, altura//2 + 50))
 
-            tempo = pygame.time.get_ticks() #retorna o tempo em milissegundos desde a inicialização do jogo
-            pisca = 500 # intervalo de tempo em 500 milissegundos
-            if (tempo % (pisca * 2)) < pisca: # tempo % 1000 < pisca(500): Retorna a mensagem, caso contrário, some.
-                tela.blit(msg_formatado, ret_msg) # Desenha a mensagem na tela
+            tempo = pygame.time.get_ticks()
+            pisca = 500
+            if (tempo % (pisca * 2)) < pisca:
+                tela.blit(msg_formatada, ret_msg)
             morreu = True
             
             for event in pygame.event.get():
@@ -173,13 +231,13 @@ def rodar_jogo():
                     sys.exit()
                 elif event.type == KEYDOWN:
                     if event.key == K_r:
-                        x_cobra, y_cobra, dir_x, dir_y, pixels, comprimento,lista_cobra, comida_x, comida_y, pontos = reiniciar_jogo()
+                        x_cobra, y_cobra, dir_x, dir_y, pixels, tam, lista_cobra, comida_x, comida_y, pontos, x_npc, y_npc, dir_x_npc, dir_y_npc, pixels_npc, tam_npc, npc_ativo, ultimo_spawn_pontos = reiniciar_jogo()
                         morreu = False
 
             ret_txt.center = largura//2, altura//2
             tela.blit(txt_formatado, ret_txt)
         
-        if len(lista_cobra) > comprimento:
+        if len(lista_cobra) > tam:
             del lista_cobra[0]
         
         pygame.display.update()
