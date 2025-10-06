@@ -20,7 +20,6 @@ def tela_inicio(tela):
     som_inicial = pygame.mixer.Sound('echoesofeternitymix.ogg')
     som_inicial.play(-1)
 
-
     pisca = 500
 
     esperando = True
@@ -47,7 +46,6 @@ def gerar_comida():
     comida_x = random.randrange(0, largura - tam_quadrado, tam_quadrado)
     comida_y = random.randrange(0, altura - tam_quadrado, tam_quadrado)
     return comida_x, comida_y
-
     
 def draw_comida(tela, comida_x, comida_y): 
         pygame.draw.rect(tela, cores.vermelho, (comida_x, comida_y, tam_quadrado, tam_quadrado))
@@ -113,12 +111,10 @@ def rodar_jogo():
                 else:
                     dir_x, dir_y = select_dir(event.key, dir_x, dir_y, tam_quadrado)
 
-
         if not morreu:
             x_cobra += dir_x
             y_cobra += dir_y
 
-            #Teletransporte da Cobra
             if x_cobra >= largura:
                 x_cobra = 0
             if x_cobra < 0:
@@ -164,7 +160,7 @@ def rodar_jogo():
             tempo = pygame.time.get_ticks() #retorna o tempo em milissegundos desde a inicialização do jogo
             pisca = 500 # intervalo de tempo em 500 milissegundos
             if (tempo % (pisca * 2)) < pisca: # tempo % 1000 < pisca(500): Retorna a mensagem, caso contrário, some.
-                tela.blit(msg_formatado, ret_msg) # Desenha a mensagem na tela
+                tela.blit(msg_formatado, ret_msg)
             morreu = True
             
             for event in pygame.event.get():
