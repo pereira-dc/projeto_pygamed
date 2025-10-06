@@ -20,8 +20,6 @@ def tela_inicio(tela):
     som_inicial = pygame.mixer.Sound('echoesofeternitymix.ogg')
     som_inicial.play(-1)
 
-    pisca = 500
-
     esperando = True
     while esperando:
         tela.fill(cores.preto)
@@ -37,9 +35,8 @@ def tela_inicio(tela):
                     som_inicial.stop()
                     esperando = False
     
-        tempo = pygame.time.get_ticks()
-        if (tempo % (pisca * 2)) < pisca:
-            tela.blit(texto_titulo, ret_titulo)
+        piscar_texto(tela, texto_titulo, ret_titulo, 500)
+
         pygame.display.update()
 
 def gerar_comida():
@@ -62,6 +59,12 @@ def draw_pontos(tela, pontos):
     fonte = pygame.font.SysFont('Courier New', 40, bold=False, italic=True)
     texto = fonte.render(f'Pontos: {pontos}', True, cores.preto)
     tela.blit(texto, (10, 10))
+
+def piscar_texto(tela, texto_renderizado, retangulo_texto, velocidade_pisca):
+    tempo = pygame.time.get_ticks()
+
+    if (tempo % (velocidade_pisca * 2)) < velocidade_pisca:
+        tela.blit(texto_renderizado, retangulo_texto)
 
 def select_dir(key, dir_x, dir_y, velocidade):
     if (key == K_DOWN or key == K_s) and dir_y != -velocidade:
@@ -219,10 +222,8 @@ def rodar_jogo():
             msg_formatada = fonte_msg.render(msg, True, (cores.branco))
             ret_msg = msg_formatada.get_rect(center=(largura//2, altura//2 + 50))
 
-            tempo = pygame.time.get_ticks()
-            pisca = 500
-            if (tempo % (pisca * 2)) < pisca:
-                tela.blit(msg_formatada, ret_msg)
+            piscar_texto(tela, msg_formatada, ret_msg, 500)
+
             morreu = True
             
             for event in pygame.event.get():
@@ -242,5 +243,5 @@ def rodar_jogo():
         
         pygame.display.update()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     rodar_jogo()
