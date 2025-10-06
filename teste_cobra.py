@@ -20,7 +20,6 @@ def tela_inicio(tela):
     som_inicial = pygame.mixer.Sound('echoesofeternitymix.ogg')
     som_inicial.play(-1)
 
-    pisca = 500
     esperando = True
     while esperando:
         tela.fill(cores.preto)
@@ -224,11 +223,6 @@ def rodar_jogo():
             ret_msg = msg_formatada.get_rect(center=(largura//2, altura//2 + 50))
 
             piscar_texto(tela, msg_formatada, ret_msg, 500)
-
-            tempo = pygame.time.get_ticks() #retorna o tempo em milissegundos desde a inicialização do jogo
-            pisca = 500 # intervalo de tempo em 500 milissegundos
-            if (tempo % (pisca * 2)) < pisca: # tempo % 1000 < pisca(500): Retorna a mensagem, caso contrário, some.
-                tela.blit(msg_formatada, ret_msg)
 
             morreu = True
             
