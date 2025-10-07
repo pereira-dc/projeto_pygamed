@@ -4,6 +4,11 @@ from pygame.locals import *
 largura, altura = 800, 600
 tam_quadrado = 20
 
+def piscar_texto(tela, texto_renderizado, retangulo_texto, velocidade_pisca):
+    tempo = pygame.time.get_ticks()
+    if (tempo % (velocidade_pisca * 2)) < velocidade_pisca:
+        tela.blit(texto_renderizado, retangulo_texto)
+
 def tela_inicio(tela):
     tela.fill(cores.preto)
     fonte_titulo = pygame.font.SysFont('Arial', 60, True, True)
@@ -63,11 +68,6 @@ def draw_recorde(tela, recorde):
     fonte = pygame.font.SysFont('Courier New', 40, bold=False, italic=True)
     texto = fonte.render(f'Recorde: {recorde}', True, cores.preto)
     tela.blit(texto, (10, 60))
-
-def piscar_texto(tela, texto_renderizado, retangulo_texto, velocidade_pisca):
-    tempo = pygame.time.get_ticks()
-    if (tempo % (velocidade_pisca * 2)) < velocidade_pisca:
-        tela.blit(texto_renderizado, retangulo_texto)
 
 def select_dir(key, dir_x, dir_y, velocidade):
     if (key == K_DOWN or key == K_s) and dir_y != -velocidade:
